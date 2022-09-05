@@ -5,9 +5,12 @@ import axios from "axios";
 import { BodyMail, TahvelTunniplaan } from "./types/types";
 import { readdirSync } from "fs";
 import path from "path";
+import "./reminder";
+import moment from "moment";
+moment.locale("et");
 
 const app: Express = express();
-const client = new Client({ intents: [GatewayIntentBits.DirectMessages], partials: [Partials.Channel] });
+export const client = new Client({ intents: [GatewayIntentBits.DirectMessages], partials: [Partials.Channel] });
 const port = process.env.PORT;
 const commandsPath = path.join(__dirname, "commands");
 const commands: Collection<unknown, Command> = new Collection();
@@ -38,20 +41,32 @@ client.on("interactionCreate", async interaction => {
       if (!command) return;
       try {
             await command.execute(interaction);
+            console.log(`[discord.js]: Used command ${interaction.commandName}`);
       }
       catch (error) {
             await interaction.reply({ content: "There was an error while executing this command!", ephemeral: true });
-
+            console.log(`[discord.js]: An error accured: ${error}`);
       }
 });
 
 client.on("messageCreate", async interaction => {
       if (interaction.channel.type == ChannelType.DM && interaction.author.id == process.env.USER_ID) {
+            if (interaction.content === "test") {
+                  const user = await client.users.fetch(process.env.USER_ID);
+
+                  // Ugly could do better but works so fuck it
+                  const today = new Date();
+                  const diff = today.getDate() - today.getDay() + (today.getDay() == 0 ? -6 : 1);
+                  const monday = new Date(today.setDate(diff));
+                  const selectedDay = new Date(monday.setDate(monday.getDate() + 2));
+
+
+                  user.send(selectedDay.toISOString());
+            }
             if (interaction.content === "tana") {
                   const today = new Date();
                   const user = await client.users.fetch(process.env.USER_ID);
                   const data = await (await axios.get(encodeURI(`https://tahvel.edu.ee/hois_back/timetableevents/timetableByGroup/14?from=${today.toISOString()}&studentGroups=6932&thru=${today.toISOString()}`))).data as TahvelTunniplaan;
-
                   const events = async () => {
                         const events = [];
                         for (let i = 0; i < data.timetableEvents.length; i++) {
@@ -73,14 +88,15 @@ client.on("messageCreate", async interaction => {
                   };
 
                   const tunniplaanEmbed = new EmbedBuilder()
-                        .setTitle(`Tunnid: ${today.toDateString()}`);
+                        .setTitle(`${moment(today).format("dddd").charAt(0).toUpperCase() + moment(today).format("dddd").slice(1)} ${moment(today).format("Do MMM")}`)
+                        .setColor("DarkRed");
                   const loop = async (events: Array<{ name: string, startTime: string, endTime: string, teacher: string, class: string}>) => {
                         for (let i = 0; i < events.length; i++) {
                               tunniplaanEmbed.addFields(
                                     {
                                           name: events[i].name,
                                           value: `${events[i].startTime} - ${events[i].endTime}\n${events[i].teacher}\n${events[i].class}`,
-                                          inline: false,
+                                          inline: true,
                                     },
                               );
                         }
@@ -88,6 +104,7 @@ client.on("messageCreate", async interaction => {
                               tunniplaanEmbed.setDescription("Täna ei toimu ühtegi tundi!");
                         }
                         await user.send({ embeds: [tunniplaanEmbed] });
+                        console.log("[discord.js]: Sent DM command: tana");
                   };
 
                   const allEvents = await events();
@@ -98,6 +115,7 @@ client.on("messageCreate", async interaction => {
 
 app.post("/receive/mail", async (req: Request, res: Response) => {
       if (req.headers["user-agent"] == "Integrately") {
+            console.log("[express]: Received post request /receive/mail");
             const mail = req.body as BodyMail;
 
             mail.message = mail.message.replace(/<[^>]*>?/gi, "").replace(new RegExp("&nbsp", "g"), " ").replace(new RegExp(";", "g"), "").substr(0, 512) + "\u2026";
@@ -107,6 +125,7 @@ app.post("/receive/mail", async (req: Request, res: Response) => {
                   .setTitle(mail.title)
                   .setDescription(`${mail["from-name"]} (${mail["from-mail"]})`)
                   .setTimestamp(new Date(mail["created-at"]))
+                  .setColor("DarkRed")
                   .addFields(
                         {
                               name: "Message",
@@ -121,8 +140,13 @@ app.post("/receive/mail", async (req: Request, res: Response) => {
                   );
             const user = await client.users.fetch(process.env.USER_ID);
             await user.send({ embeds: [mailEmbed] });
+            console.log("[discord.js]: Sent email notification!");
+            res.sendStatus(200);
       }
-      res.sendStatus(200);
+      else {
+            res.sendStatus(403);
+            console.log(`[express]: 403 error from: ${req}`);
+      }
 });
 
 app.listen(port, () => {
