@@ -10,7 +10,7 @@ export const lessonChecker = schedule.scheduleJob("00 07 * * *", async function(
       data.timetableEvents.forEach(timetableEvent => {
             const [minutes, hours] = [Number(timetableEvent.timeStart.split(":")[1]), Number(timetableEvent.timeStart.split(":")[0])];
             schedule.scheduleJob(`${minutes - 5} ${hours} * * *`, async function() {
-                  const channel = client.channels.cache.get("1015312371494944828") as TextChannel; // Prolly should make channel ID changeable via command
+                  const channel = client.channels.cache.get("1015312371494944828") as TextChannel; // Prolly should make channel ID changeable via command or into .env
                   const embed = new EmbedBuilder()
                         .setTitle(`Tund: ${timetableEvent.nameEt}`)
                         .setDescription(`Algab 5 minuti pärast!\n Klassis: ${timetableEvent.rooms[0].buildingCode}-${timetableEvent.rooms[0].roomCode}`);

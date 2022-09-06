@@ -57,7 +57,7 @@ module.exports = {
                               {
                                     name: events[i].name,
                                     value: `${events[i].startTime} - ${events[i].endTime}\n${events[i].teacher}\n${events[i].class}`,
-                                    inline: true,
+                                    inline: false,
                               },
                         );
                   }
