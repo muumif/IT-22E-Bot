@@ -1,16 +1,26 @@
 import express, { Express, Request, Response } from "express";
 import bodyParser from "body-parser";
-import { ChannelType, Client, Collection, EmbedBuilder, GatewayIntentBits, Partials, Command } from "discord.js";
+import { ChannelType, Client, Collection, EmbedBuilder, GatewayIntentBits, Partials, Command, TextChannel } from "discord.js";
 import axios from "axios";
 import { BodyMail, TahvelTunniplaan } from "./types/types";
 import { readdirSync } from "fs";
 import path from "path";
+import schedule from "node-schedule";
 import "./reminder";
 import moment from "moment";
+import { lessonChecker } from "./reminder";
 moment.locale("et");
 
 const app: Express = express();
-export const client = new Client({ intents: [GatewayIntentBits.DirectMessages], partials: [Partials.Channel] });
+export const client = new Client({ intents: [
+      GatewayIntentBits.DirectMessages, 
+      GatewayIntentBits.MessageContent, 
+      GatewayIntentBits.Guilds, 
+      GatewayIntentBits.GuildMessages
+], partials: [
+      Partials.Channel, 
+      Partials.Message
+]});
 const port = process.env.PORT;
 const commandsPath = path.join(__dirname, "commands");
 const commands: Collection<unknown, Command> = new Collection();
@@ -51,21 +61,16 @@ client.on("interactionCreate", async interaction => {
 
 client.on("messageCreate", async interaction => {
       if (interaction.channel.type == ChannelType.DM && interaction.author.id == process.env.USER_ID) {
+            const user = await client.users.fetch(process.env.USER_ID);
             if (interaction.content === "test") {
-                  const user = await client.users.fetch(process.env.USER_ID);
 
-                  // Ugly could do better but works so fuck it
-                  const today = new Date();
-                  const diff = today.getDate() - today.getDay() + (today.getDay() == 0 ? -6 : 1);
-                  const monday = new Date(today.setDate(diff));
-                  const selectedDay = new Date(monday.setDate(monday.getDate() + 2));
-
-
-                  user.send(selectedDay.toISOString());
+            }
+            if (interaction.content == "invoke") {
+                  lessonChecker.invoke();
+                  await user.send("Ran lesson checker!");
             }
             if (interaction.content === "tana") {
                   const today = new Date();
-                  const user = await client.users.fetch(process.env.USER_ID);
                   const data = await (await axios.get(encodeURI(`https://tahvel.edu.ee/hois_back/timetableevents/timetableByGroup/14?from=${today.toISOString()}&studentGroups=6932&thru=${today.toISOString()}`))).data as TahvelTunniplaan;
                   const events = async () => {
                         const events = [];
