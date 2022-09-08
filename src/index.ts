@@ -62,7 +62,6 @@ client.on("messageCreate", async interaction => {
       if (interaction.channel.type == ChannelType.DM && interaction.author.id == process.env.USER_ID) {
             const user = await client.users.fetch(process.env.USER_ID);
             if (interaction.content === "test") {
-                  user.send(interaction.content);
             }
             if (interaction.content == "invoke") {
                   lessonChecker.invoke();
