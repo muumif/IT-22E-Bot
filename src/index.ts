@@ -61,59 +61,6 @@ client.on("interactionCreate", async interaction => {
 client.on("messageCreate", async interaction => {
       if (interaction.channel.type == ChannelType.DM && interaction.author.id == process.env.USER_ID) {
             const user = await client.users.fetch(process.env.USER_ID);
-            if (interaction.content === "test") {
-                  const today = new Date("2023-01-31T18:54:47.499Z");
-                  const data = await (await axios.get(encodeURI("https://tahvel.edu.ee/hois_back/timetableevents/timetableByGroup/14?from=2023-01-31T18:54:47.499Z&studentGroups=6932&thru=2023-01-31T18:54:47.499Z"))).data as TahvelTunniplaan;
-                  const events = async () => {
-                        const events = [];
-                        for (let i = 0; i < data.timetableEvents.length; i++) {
-                              if (new Date(data.timetableEvents[i].date).getDate() == today.getDate()) {
-                                    let building_code: "A" | "B" | "" = "";
-                                    let room_code = "";
-                                    if (data.timetableEvents[i].rooms.length != 0) {
-                                          building_code = data.timetableEvents[i].rooms[0]?.buildingCode as "A" | "B";
-                                          room_code = data.timetableEvents[i].rooms[0]?.roomCode as string;
-                                    }
-                                    events.push({
-                                          name: data.timetableEvents[i].nameEt,
-                                          startTime: data.timetableEvents[i].timeStart,
-                                          endTime: data.timetableEvents[i].timeEnd,
-                                          teacher: data.timetableEvents[i].teachers[0].name,
-                                          class: `${building_code}-${room_code}`,
-                                    });
-                              }
-                        }
-                        events.sort((a, b) => {
-                              return Number(a.startTime.replace(":", "")) - Number(b.startTime.replace(":", ""));
-                        });
-
-                        return events;
-                  };
-
-                  const tunniplaanEmbed = new EmbedBuilder()
-                        .setTitle(`${moment(today).format("dddd").charAt(0).toUpperCase() + moment(today).format("dddd").slice(1)} ${moment(today).format("Do MMM")}`)
-                        .setColor("DarkRed");
-                  const loop = async (events: Array<{ name: string, startTime: string, endTime: string, teacher: string, class: string}>) => {
-                        for (let i = 0; i < events.length; i++) {
-                              tunniplaanEmbed.addFields(
-                                    {
-                                          name: events[i].name,
-                                          value: `${events[i].startTime} - ${events[i].endTime}\n${events[i].teacher}\n${events[i].class}`,
-                                          inline: true,
-                                    },
-                              );
-                        }
-                        if (tunniplaanEmbed.data.fields === undefined) {
-                              tunniplaanEmbed.setDescription("Täna ei toimu ühtegi tundi!");
-                        }
-                        await user.send({ embeds: [tunniplaanEmbed] });
-                        console.log("[discord.js]: Sent DM command: tana");
-                  };
-
-                  const allEvents = await events();
-                  await loop(allEvents);
-            }
-
             if (interaction.content == "invoke") {
                   lessonChecker.invoke();
                   await user.send("Ran lesson checker!");
