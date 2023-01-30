@@ -15,7 +15,7 @@ export const lessonChecker = schedule.scheduleJob("00 07 * * *", async function(
             schedule.scheduleJob(date, async function() {
                   const embed = new EmbedBuilder()
                         .setTitle(`Tund: ${timetableEvent.nameEt}`)
-                        .setDescription(`<t:${Math.floor(date.getTime() / 1000)}:R>\nKlassis: ${timetableEvent.rooms[0].buildingCode}-${timetableEvent.rooms[0].roomCode}\n`);
+                        .setDescription(`<t:${Math.floor(date.getTime() / 1000)}:R>\nKlassis: ${timetableEvent.rooms[0]?.buildingCode}-${timetableEvent.rooms[0]?.roomCode}\n`);
                   await channel.send({ embeds: [embed] });
                   console.log(`[discord.js]: Sent 5 minute reminder to ${channel.name}`);
             });

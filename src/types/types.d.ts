@@ -34,7 +34,7 @@ type timetableEvent = {
                   roomCode: string,
                   buildingCode: "A" | "B"
             }
-      ],
+      ] | [],
       studentGroups: [
             studentGroups
       ],

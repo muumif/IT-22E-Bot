@@ -17,12 +17,18 @@ module.exports = {
                   const events = [];
                   for (let i = 0; i < data.timetableEvents.length; i++) {
                         if (new Date(data.timetableEvents[i].date).getDate() == today.getDate()) {
+                              let building_code: "A" | "B" | "" = "";
+                              let room_code = "";
+                              if (data.timetableEvents[i].rooms.length != 0) {
+                                    building_code = data.timetableEvents[i].rooms[0]?.buildingCode as "A" | "B";
+                                    room_code = data.timetableEvents[i].rooms[0]?.roomCode as string;
+                              }
                               events.push({
                                     name: data.timetableEvents[i].nameEt,
                                     startTime: data.timetableEvents[i].timeStart,
                                     endTime: data.timetableEvents[i].timeEnd,
                                     teacher: data.timetableEvents[i].teachers[0].name,
-                                    class: `${data.timetableEvents[i].rooms[0].buildingCode}-${data.timetableEvents[i].rooms[0].roomCode}`,
+                                    class: `${building_code}-${room_code}`,
                               });
                         }
                   }
