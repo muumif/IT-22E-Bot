@@ -27,7 +27,7 @@ module.exports = {
                                     name: data.timetableEvents[i].nameEt,
                                     startTime: data.timetableEvents[i].timeStart,
                                     endTime: data.timetableEvents[i].timeEnd,
-                                    teacher: data.timetableEvents[i].teachers[0].name,
+                                    teacher: data.timetableEvents[i]?.teachers[0].name,
                                     class: `${building_code}-${room_code}`,
                               });
                         }
